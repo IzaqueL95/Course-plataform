@@ -44,7 +44,7 @@ function uploadImg(input_file, img, input_path){
 			// console.log(response[""])
 			if(response["status"]){
 				img.attr("src", response["img_path"])
-				input_path.val(response["img_size_return"])
+				input_path.val(response["img_path"])
 				
 
 			}else{
