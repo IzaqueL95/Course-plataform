@@ -22,4 +22,43 @@ class Users_model extends CI_Model {
 		}
 	}
 
+	public function get_data($id, $select = NULL){
+
+		if(!empty($select)){
+			$this->db->select($select);
+		}
+
+		$this->db->from("users");
+		$this->db->where("user_id", $id);
+		return $this->db->get();
+	}
+
+	public function insert($data){
+	
+		$this->db->insert("users", $data);
+	}
+
+	public function update($id, $data){
+	
+		$this->db->where("user_id", $id);
+		$this->db->update("users", $data);
+	}
+
+	public function delete($id){
+		$this->db->where("user_id", $id);
+		$this->db->delete("users");
+	}
+
+	public function is_duplicated($field, $value, $id = NULL){
+		if(!empty($id)){
+			$this->db->where("user_id <>", $id);
+		}
+		$this->db->from("users");
+		$this->db->where($field, $id);
+
+		return $this->db->get()->num_rows() > 0;
+
+	}
+
+
 }
