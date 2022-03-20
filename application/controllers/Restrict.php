@@ -116,7 +116,8 @@ class Restrict extends CI_Controller {
 			elseif($this->upload->data()["file_size"] >= 1024){
 				$json["img_size_return"] = "tamanho da imagem " . $this->upload->data()["file_size"] . " MB";
 				$json["status"] = 0;
-				$json["error"] = "Arquivo maior que o permitido.";
+				$imgSize = $this->upload->data()["file_size"];
+				$json["error"] = "Arquivo maior que o permitido, tamanho atual: " . substr(number_format($imgSize, 2,),0,4) . 'MB';
 			}
 			else{
 				$sizeError = $this->upload->data()["file_size"];
@@ -161,24 +162,24 @@ class Restrict extends CI_Controller {
 		if(empty($data["course_duration"])){
 			$json["error_list"]["#course_duration"] = "Duração do curso é obrigatorio";
 		}else{
-			if(!$data["course_duration"] > 0 && $data["course_duration"] < 100){
+			if(!($data["course_duration"] > 0 && $data["course_duration"] < 100)){
 				$json["error_list"]["#course_name"] = "Duração deve ser maior que 0 (h) ou menor que 100 (h)";
 
 			}
 		}
 
-		if(empty($json["error_list"])){
+		if(!empty($json["error_list"])){
 			$json["status"] = 0;
 		}else{
 			if(!empty($data["course_img"])){
 				http://localhost/codeigniter/tmp/bit.png
 				$file_name = basename($data["course_img"]); /*  /bit.png  */
-				$old_path = getcwd() . "/tmp" . $file_name;
+				$old_path = getcwd() . "/tmp/" . $file_name;
 				$new_path = getcwd() . "/public/images/courses/" . $file_name;
 				rename($old_path, $new_path);
 			}
 
-			if(!empty($data["course_id"])) {
+			if(empty($data["course_id"])) {
 				$this->courses_model->insert($data);
 			}else{
 				$course_id = $data["course_id"];
