@@ -7,6 +7,9 @@ $(function() {
 	})
 
 	$('#btn_add_member').click(function() {
+		clearErrors()
+		$('#form_member').modal()[0].reset();
+		$('#member_photo_path').modal().attr("src", "")
 		$('#modal_member').modal();
 	})
 
@@ -19,7 +22,7 @@ $(function() {
 	});
 
 	$('#btn_upload_member_photo').change(function(){
-		uploadImg($(this), $("#member_photo_path"), $("member_photo"))
+		uploadImg($(this), $("#member_photo_path"), $("#member_photo"))
 	});
 
 	$('#form_course').submit(function() {
@@ -37,6 +40,33 @@ $(function() {
 				clearErrors()
 				if(response["status"]){
 					$('#modal_course').modal("hide");
+				}else{
+					
+					showErrorsModal(response["error_list"])
+				}
+			}
+		})
+
+
+		return false
+
+	})
+
+	$('#form_member').submit(function() {
+
+		$.ajax({
+			type: "POST",
+			url: BASE_URL + "restrict/ajax_save_member",
+			dataType: "json",
+			data: $(this).serialize(),
+			beforeSend: function(){
+				clearErrors();
+				$("#btn_save_member").siblings(".help-block").html(loadImg("Verificando..."))
+			},
+			success: function(response){ 
+				clearErrors()
+				if(response["status"]){
+					$('#modal_member').modal("hide");
 				}else{
 					
 					showErrorsModal(response["error_list"])
