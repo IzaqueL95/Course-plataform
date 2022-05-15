@@ -12,7 +12,7 @@
 				<div class="row">
 					<div class="col-lg-offset-5 col-lg-2 text-center">
 						<div class="form-group">
-							<a href="" class="btn btn-link"><i class="fa fa-user"></i></a>
+							<a href="" id="btn_your_user" user_id="<?=$user_id?>" class="btn btn-link"><i class="fa fa-user"></i></a>
 							<a href="restrict/logoff" class="btn btn-link"><i class="fa fa-sign-out"></i></a>
 						</div>
 					</div>

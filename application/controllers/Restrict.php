@@ -1,4 +1,4 @@
-<?php 
+d<?php 
 
 defined('BASEPATH') OR exit('No direct script access allowed');
 
@@ -17,10 +17,18 @@ class Restrict extends CI_Controller {
 		// echo password_hash('123456', PASSWORD_DEFAULT);
 		if($this->session->userdata("user_id")){
 			$data = array(
+				"styles" => array(
+					"dataTables.bootstrap4.min",
+					"datatables.min.css"
+				),
 				"scripts" => array(
+					"datatables.min",
+					"dataTables.bootstrap4.min.js",
+					"sweetalert2.all.min.js",
 					"util.js",
 					"restrict.js"
-				)
+				),
+				"user_id" => $this->session->userdata("user_id")
 			);
 			$this->template->show("restrict.php", $data);
 		}else{
@@ -244,6 +252,171 @@ class Restrict extends CI_Controller {
 
 		echo json_encode($json);
 		
+	}
+
+	public function ajax_save_user(){
+		
+		if(!$this->input->is_ajax_request()){
+
+			exit("Nenhum acesso de script permitido");
+			
+		}
+
+	
+		$json = array();
+		$json["status"] = 1;
+		$json["error_list"] = array();
+
+		$this->load->model("users_model");
+
+		$data = $this->input->post();
+
+		if(empty($data["user_login"])){
+			$json["error_list"]["#user_login"] = "Login é obrigatório.";
+		}else{
+			if($this->users_model->is_duplicated("user_login",$data["user_login"], $data["user_id"])){
+				$json["error_list"]["#user_login"] = "Login já existente";
+
+			}
+		}
+
+		if(empty($data["user_full_name"])){
+			$json["error_list"]["#user_full_name"] = "Nome completo é obrigatório.";
+		}
+
+		if(empty($data["user_email"])){
+			$json["error_list"]["#user_email"] = "E-mail é obrigatório.";
+		}else{
+			if($this->users_model->is_duplicated("user_email",$data["user_email"], $data["user_id"])){
+				$json["error_list"]["#user_email"] = "E-mail já existente";
+			}else {
+				if($data['user_email'] != $data['user_email_confirm']){
+					$json["error_list"]["#user_email"] = "";
+					$json["error_list"]["#user_email_confirm"] = "E-mails não conferem";
+				}
+			}
+		}
+
+		if(empty($data["user_password"])){
+			$json["error_list"]["#user_password"] = "Senha é obrigatória.";
+		}else{
+				if($data['user_password'] != $data['user_password_confirm']){
+					$json["error_list"]["#user_password"] = "";
+					$json["error_list"]["#user_password_confirm"] = "Senhas não conferem";
+				}
+			
+		}
+
+		
+
+		if(!empty($json["error_list"])){
+			$json["status"] = 0;
+		}else{
+		
+			
+			$data["password_hash"] = password_hash($data["user_password"], PASSWORD_DEFAULT);
+
+			unset($data["user_password"]);
+			unset($data["user_password_confirm"]);
+			unset($data["user_email_confirm"]);
+
+			if(empty($data["user_id"])) {
+				$this->users_model->insert($data);
+			}else{
+				$user_id = $data["user_id"];
+				unset($data["user_id"]);
+				$this->users_model->update($user_id, $data);
+			}
+		}
+
+
+
+
+		echo json_encode($json);
+		
+	}
+
+
+	public function ajax_get_user_data(){
+		
+		if(!$this->input->is_ajax_request()){
+
+			exit("Nenhum acesso de script permitido");
+			
+		}
+
+	
+		$json = array();
+		$json["status"] = 1;
+		$json["input"] = array();
+
+		$this->load->model("users_model");
+
+		$user_id = $this->input->post("user_id");
+		$data = $this->users_model->get_data($user_id)->result_array()[0];
+
+		$json["input"]["user_id"] = $data["user_id"];
+		$json["input"]["user_login"] = $data["user_login"];
+		$json["input"]["user_full_name"] = $data["user_full_name"];
+		$json["input"]["user_email"] = $data["user_email"];
+		$json["input"]["user_email_confirm"] = $data["user_email"];
+		$json["input"]["user_password"] = $data["password_hash"];	
+		$json["input"]["user_password_confirm"] = $data["password_hash"];
+	
+		
+		echo json_encode($json);
+		
+	}
+
+	public function ajax_list_course()
+	{
+		if(!$this->input->is_ajax_request()){
+
+			exit("Nenhum acesso de script permitido");
+			
+		}
+		$this->load->model("courses_model");
+		$courses = $this->courses_model->get_datatable();
+
+		$data = array();
+
+		foreach($courses as $course){
+			$row = array();
+			$row[] = $course->course_name;
+
+			if($course->curse_img){
+				$row = '<img src="'.base_url().$course->course_img.'" style="max-height:100px; max-width:100px;">';
+			}else{
+				$row[] = '';
+
+			}
+
+			$row[] = $courses->course_duration;
+			$row[] = '<div class "description">' . $course->course_description. '</div>';
+
+			$row[] = '<div style="display: inline-block;>
+				<button class="btn-primary btn-edit-course" course_id="'.$course->course_id.'" 
+					<i class="fa fa-edit"></i>
+				</button>
+
+				<button class="btn-danger btn-del-course" course_id="'.$course->course_id.'" 
+					<i class="fa fa-edit"></i>
+				</button>
+			</div>';
+
+
+			$data[] = $row;
+		}
+
+		$json = array(
+			"draw" => $this->input->post("draw"),
+			"recordsTotal" => $this->courses_model->records_total(),
+			"recordsFiltered" => $this->courses_model->records_filtered(),
+			"data" => $data,
+		);
+
+		echo json_encode($json);
+
 	}
 	
 }
